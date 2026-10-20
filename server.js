@@ -6,33 +6,6 @@ const port = 6767;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // parse JSON bodies
 
-// STUDENT-COURSES
-
-async function studentCourses(student_id) {
-  try {
-    const courses = await pool.query(
-      `SELECT courses.id, courses.name
-       FROM course_students
-       JOIN courses ON courses.id = course_students.course_id
-       WHERE course_students.student_id = $1`,
-      [student_id],
-    );
-
-    if (courses.rowCount === 0) {
-      console.log(`404: No courses found for student with ID ${student_id}`);
-      return [];
-    }
-
-    console.table(courses.rows);
-    return courses.rows;
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-}
-
-// ROOT
-
 app.get("/", async (req, res) => {
   try {
     const one = await pool.query("SELECT NOW() AS current_time");
@@ -108,9 +81,7 @@ app.get("/students/:id", async (req, res) => {
     }
 
     console.table(one.rows[0]);
-    console.log("Courses:");
-    const courses = await studentCourses(id);
-    res.status(200).json({ ...one.rows[0], courses });
+    res.status(200).json(one.rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not fetch student" });
@@ -159,5 +130,5 @@ app.post("/students", async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  console.log(`"Hogwarts CMS" Project listening on port ${port}`);
 });
