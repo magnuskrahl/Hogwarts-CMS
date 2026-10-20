@@ -35,6 +35,7 @@ app.get("/houses", async (req, res) => {
 
 app.get("/houses/:id", async (req, res) => {
   const { id } = req.params;
+  // eller req.params.id?
   try {
     const result = await pool.query("SELECT * FROM houses WHERE id = $1", [id]);
     if (result.rows.length === 0) {
@@ -81,18 +82,33 @@ app.get("/students/:id", async (req, res) => {
 });
 
 app.delete("/students/:id", async (req, res) => {
-  const { id } = req.params;
+  //
+  // const { id } = req.params;
+  // try {
+  //   const result = await pool.query("DELETE FROM students WHERE id = $1", [id]);
+  //   if (result.rowCount === 0) {
+  //     res.status(404).json({ error: `Student with ID ${id} not found` });
+  //     console.log(`404: Student with ID ${id} not found`);
+  //   } else {
+  //     console.log(`204: Student with ID ${id} deleted`);
+  //     res.status(204).json({ message: `Student with ID ${id} deleted` }); // 204 No Content korrekt?
+  //   }
+  // } catch (error) {
+  //   res.status(500).json({ error: "Could not delete student" });
+  // }
+
+  // Alternativt setup:
   try {
-    const result = await pool.query("DELETE FROM students WHERE id = $1", [id]);
-    if (result.rowCount === 0) {
-      res.status(404).json({ error: `Student with ID ${id} not found` });
-      console.log(`404: Student with ID ${id} not found`);
-    } else {
-      console.log(`204: Student with ID ${id} deleted`);
-      res.status(204).json({ message: `Student with ID ${id} deleted` }); // 204 No Content korrekt?
-    }
-  } catch (error) {
-    res.status(500).json({ error: "Could not delete student" });
+    const id = req.params.id;
+
+    const one = await pool.query("SELECT * FROM students WHERE id = $1", [id]);
+
+    if (one.rowCount === 0) return res.sendStatus(404);
+
+    res.status(200).json(one.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "500: Database error occured" });
   }
 });
 
