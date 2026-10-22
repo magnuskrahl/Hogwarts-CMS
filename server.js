@@ -311,3 +311,28 @@ app.delete("/students/:id", async (req, res) => {
 app.listen(port, () => {
   console.log(`"Hogwarts CMS" Project listening on port ${port}`);
 });
+
+// --COURSES--
+
+// CREATE
+
+// ...
+
+// READ
+
+app.get("/courses", async (req, res) => {
+  try {
+    // c = courses, cs = courses_students
+    // array_agg(): saml alle student ID's for hvert course i et array
+    // LEFT JOIN: hvis der ikke er nogen student ID's for et course, returner stadig course
+    const all = await pool.query(
+      "SELECT c.id, c.name, c.teacher, array_agg(cs.student) AS students FROM courses c LEFT JOIN courses_students cs ON cs.course = c.id GROUP BY c.id ORDER BY c.id;",
+    );
+    res.status(200).json(all.rows);
+
+    console.table(all.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not fetch courses" });
+  }
+});
