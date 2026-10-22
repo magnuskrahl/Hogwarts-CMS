@@ -136,23 +136,38 @@ app.patch("/students/:id", async (req, res) => {
   try {
     const id = req.params.id;
 
-    const one = await pool.query("SELECT * FROM students WHERE id = $1", [id]);
+    const name = req.body.name;
+    const house = req.body.house;
+    const semester = req.body.semester;
+    const queryData = [id];
+    const sets = [];
 
-    if (one.rowCount === 0) {
+    if (name !== undefined) {
+      queryData.push(name);
+      sets.push(`name = $${queryData.length}`);
+    }
+    if (house !== undefined) {
+      queryData.push(house);
+      sets.push(`house = $${queryData.length}`);
+    }
+    if (semester !== undefined) {
+      queryData.push(semester);
+      sets.push(`semester = $${queryData.length}`);
+    }
+
+    if (sets.length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    const updated = await pool.query(
+      `UPDATE students SET ${sets.join(", ")} WHERE id = $1 RETURNING *`,
+      queryData,
+    );
+
+    if (updated.rowCount === 0) {
       console.log(`404: Student with ID ${id} not found`);
       return res.status(404).json({ error: `Student with ID ${id} not found` });
     }
-
-    const name = req.body.name ?? one.rows[0].name;
-    const house = req.body.house ?? one.rows[0].house;
-    const semester = req.body.semester ?? one.rows[0].semester;
-    // Mit nuværende approach; kører to queries, har hørt det ikke er optimalt. (Noget med race condtions?)
-    // Oh well, studieprojekt
-
-    const updated = await pool.query(
-      "UPDATE students SET name = $2, house = $3, semester = $4 WHERE id = $1 RETURNING *",
-      [id, name, house, semester],
-    );
 
     console.log(`200: Student with ID ${id} updated`);
     res.status(200).json(updated.rows[0]);
