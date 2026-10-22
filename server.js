@@ -6,7 +6,7 @@ const port = 6767;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // parse JSON bodies
 
-// ROOT
+// --ROOT--
 
 app.get("/", async (req, res) => {
   try {
@@ -26,7 +26,9 @@ app.get("/", async (req, res) => {
   }
 });
 
-// HOUSES
+// --HOUSES--
+
+// READ
 
 app.get("/houses", async (req, res) => {
   try {
@@ -58,7 +60,153 @@ app.get("/houses/:id", async (req, res) => {
   }
 });
 
-// STUDENTS
+// --TEACHERS--
+
+// CREATE
+
+app.post("/teachers", async (req, res) => {
+  try {
+    const name = req.body.name;
+    const house = req.body.house ?? 0;
+    const created = await pool.query(
+      "INSERT INTO teachers (name, house) VALUES ($1, $2) RETURNING *",
+      [name, house],
+    );
+
+    console.log(
+      `201: Teacher "${name}" created with ID ${created.rows[0].id}:`,
+    );
+    console.table(created.rows[0]);
+    res.status(201).json(created.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not create teacher" });
+  }
+});
+
+// READ
+
+app.get("/teachers", async (req, res) => {
+  try {
+    const all = await pool.query("SELECT * FROM teachers");
+
+    res.status(200).json(all.rows);
+    console.table(all.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not fetch teachers" });
+  }
+});
+
+app.get("/teachers/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const one = await pool.query("SELECT * FROM teachers WHERE id = $1", [id]);
+
+    if (one.rowCount === 0) {
+      console.log(`404: Teacher with ID ${id} not found`);
+      return res.status(404).json({ error: `Teacher with ID ${id} not found` });
+    }
+
+    console.table(one.rows[0]);
+    res.status(200).json(one.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not fetch teacher" });
+  }
+});
+
+// UPDATE
+
+app.patch("/teachers/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const name = req.body.name;
+    const house = req.body.house;
+    const queryData = [id];
+    const sets = [];
+
+    if (name !== undefined) {
+      queryData.push(name);
+      sets.push(`name = $${queryData.length}`);
+    }
+    if (house !== undefined) {
+      queryData.push(house);
+      sets.push(`house = $${queryData.length}`);
+    }
+
+    if (sets.length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    const updated = await pool.query(
+      `UPDATE teachers SET ${sets.join(", ")} WHERE id = $1 RETURNING *`,
+      queryData,
+    );
+
+    if (updated.rowCount === 0) {
+      console.log(`404: Teacher with ID ${id} not found`);
+      return res.status(404).json({ error: `Teacher with ID ${id} not found` });
+    }
+
+    console.log(`200: Teacher with ID ${id} updated`);
+    res.status(200).json(updated.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not update teacher" });
+  }
+});
+
+// DELETE
+
+app.delete("/teachers/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const deleted = await pool.query(
+      "DELETE FROM teachers WHERE id = $1 RETURNING *",
+      [id],
+    );
+
+    if (deleted.rowCount === 0) {
+      console.log(`404: Teacher with ID ${id} not found`);
+      return res.status(404).json({ error: `Teacher with ID ${id} not found` });
+    }
+
+    console.log(`200: Teacher with ID ${id} deleted`);
+    res.status(200).json(deleted.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not delete teacher" });
+  }
+});
+
+// --STUDENTS--
+
+// CREATE
+
+app.post("/students", async (req, res) => {
+  try {
+    const name = req.body.name;
+    const house = req.body.house ?? 0;
+    const semester = req.body.semester ?? 0;
+    const created = await pool.query(
+      "INSERT INTO students (name, house, semester) VALUES ($1, $2, $3) RETURNING *",
+      [name, house, semester],
+    );
+
+    console.log(
+      `201: Student "${name}" created with ID ${created.rows[0].id}:`,
+    );
+    console.table(created.rows[0]);
+    res.status(201).json(created.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not create student" });
+  }
+});
+
+// READ
 
 app.get("/students", async (req, res) => {
   try {
@@ -90,47 +238,7 @@ app.get("/students/:id", async (req, res) => {
   }
 });
 
-app.delete("/students/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    const deleted = await pool.query(
-      "DELETE FROM students WHERE id = $1 RETURNING *",
-      [id],
-    );
-
-    if (deleted.rowCount === 0) {
-      console.log(`404: Student with ID ${id} not found`);
-      return res.status(404).json({ error: `Student with ID ${id} not found` });
-    }
-
-    console.log(`200: Student with ID ${id} deleted`);
-    res.status(200).json(deleted.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Could not delete student" });
-  }
-});
-
-app.post("/students", async (req, res) => {
-  try {
-    const name = req.body.name;
-    const house = req.body.house ?? 0;
-    const semester = req.body.semester ?? 0;
-    const created = await pool.query(
-      "INSERT INTO students (name, house, semester) VALUES ($1, $2, $3) RETURNING *",
-      [name, house, semester],
-    );
-
-    console.log(
-      `201: Student "${name}" created with ID ${created.rows[0].id}:`,
-    );
-    console.table(created.rows[0]);
-    res.status(201).json(created.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Could not create student" });
-  }
-});
+// UPDATE
 
 app.patch("/students/:id", async (req, res) => {
   try {
@@ -174,6 +282,29 @@ app.patch("/students/:id", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not update student" });
+  }
+});
+
+// DELETE
+
+app.delete("/students/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const deleted = await pool.query(
+      "DELETE FROM students WHERE id = $1 RETURNING *",
+      [id],
+    );
+
+    if (deleted.rowCount === 0) {
+      console.log(`404: Student with ID ${id} not found`);
+      return res.status(404).json({ error: `Student with ID ${id} not found` });
+    }
+
+    console.log(`200: Student with ID ${id} deleted`);
+    res.status(200).json(deleted.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not delete student" });
   }
 });
 
