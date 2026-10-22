@@ -6,6 +6,8 @@ const port = 6767;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // parse JSON bodies
 
+// ROOT
+
 app.get("/", async (req, res) => {
   try {
     const one = await pool.query("SELECT NOW() AS current_time");
@@ -112,10 +114,11 @@ app.delete("/students/:id", async (req, res) => {
 app.post("/students", async (req, res) => {
   try {
     const name = req.body.name;
-    const house = req.body.house ?? "Unsorted";
+    const house = req.body.house ?? 0;
+    const semester = req.body.semester ?? 0;
     const created = await pool.query(
-      "INSERT INTO students (name, house) VALUES ($1, $2) RETURNING *",
-      [name, house],
+      "INSERT INTO students (name, house, semester) VALUES ($1, $2, $3) RETURNING *",
+      [name, house, semester],
     );
 
     console.log(
