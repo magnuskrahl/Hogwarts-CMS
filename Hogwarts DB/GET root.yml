@@ -1,0 +1,14 @@
+info:
+  name: GET root
+  type: http
+
+http:
+  method: GET
+  url: http://localhost:6767/
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
