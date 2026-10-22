@@ -1,5 +1,5 @@
 info:
-  name: POST Students
+  name: POST Student
   type: http
   seq: 4
 

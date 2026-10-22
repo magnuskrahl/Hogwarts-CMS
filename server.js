@@ -132,6 +132,36 @@ app.post("/students", async (req, res) => {
   }
 });
 
+app.patch("/students/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const one = await pool.query("SELECT * FROM students WHERE id = $1", [id]);
+
+    if (one.rowCount === 0) {
+      console.log(`404: Student with ID ${id} not found`);
+      return res.status(404).json({ error: `Student with ID ${id} not found` });
+    }
+
+    const name = req.body.name ?? one.rows[0].name;
+    const house = req.body.house ?? one.rows[0].house;
+    const semester = req.body.semester ?? one.rows[0].semester;
+    // Mit nuværende approach; kører to queries, har hørt det ikke er optimalt. (Noget med race condtions?)
+    // Oh well, studieprojekt
+
+    const updated = await pool.query(
+      "UPDATE students SET name = $2, house = $3, semester = $4 WHERE id = $1 RETURNING *",
+      [id, name, house, semester],
+    );
+
+    console.log(`200: Student with ID ${id} updated`);
+    res.status(200).json(updated.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not update student" });
+  }
+});
+
 app.listen(port, () => {
   console.log(`"Hogwarts CMS" Project listening on port ${port}`);
 });

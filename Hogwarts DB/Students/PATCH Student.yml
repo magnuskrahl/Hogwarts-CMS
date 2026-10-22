@@ -1,0 +1,23 @@
+info:
+  name: PATCH Student
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: http://localhost:6767/students/13
+  body:
+    type: json
+    data: |-
+      {
+        "name": "[NAME]",
+        "semester": 0,
+        "house": 0
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
