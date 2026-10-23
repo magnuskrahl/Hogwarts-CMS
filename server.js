@@ -308,13 +308,40 @@ app.delete("/students/:id", async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`"Hogwarts CMS" Project listening on port ${port}`);
-});
-
 // --COURSES--
 
 // CREATE
+
+app.post("/courses", async (req, res) => {
+  try {
+    const name = req.body.name;
+    let teacher = req.body.teacher;
+    const students = req.body.students ?? [];
+
+    //TODO: hvis ingen students, så skal det være et tomt array, ikke null
+    //eller, printes null når den nye course fås via GET /courses/:id, hvis der ingen students er tilknyttet?
+    //i hvert fald, faulty error handling, poster en 500 error hvis ingen students, men der bliver oprettet en
+    // course. ¯\_(ツ)_/¯
+
+    const created = await pool.query(
+      `WITH new_course AS (INSERT INTO courses (name, teacher) VALUES ($1, $2) RETURNING id) INSERT INTO courses_students (course, student) SELECT new_course.id, student_id FROM new_course CROSS JOIN unnest($3::int[]) AS student_id RETURNING *;`,
+      [name, teacher, students],
+    );
+
+    console.log(
+      `201: Course "${name}" created with ID ${created.rows[0].course}:`,
+    );
+
+    // lille trick for at formattere outputtet ligesom single fetch
+    const print = [{ id: created.rows[0].course, ...req.body }];
+
+    console.table(print);
+    res.status(201).json(print);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not create course" });
+  }
+});
 
 // ...
 
@@ -346,8 +373,8 @@ app.get("/courses/:id", async (req, res) => {
     );
 
     if (course.rowCount === 0) {
-      console.log(`404: Student with ID ${id} not found`);
-      return res.status(404).json({ error: `Student with ID ${id} not found` });
+      console.log(`404: Course with ID ${id} not found`);
+      return res.status(404).json({ error: `Course with ID ${id} not found` });
     }
 
     res.status(200).json(course.rows);
@@ -356,4 +383,8 @@ app.get("/courses/:id", async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "Could not fetch course" });
   }
+});
+
+app.listen(port, () => {
+  console.log(`"Hogwarts CMS" Project listening on port ${port}`);
 });
