@@ -27,14 +27,14 @@ CREATE TABLE students
 (
     id       int generated always as identity primary key,
     name     varchar(240)               not null,
-    semester int                        not null,
-    house    int references houses (id) not null
+    semester int                        not null default 0,
+    house    int references houses (id) not null default 0
 );
 
 CREATE TABLE courses_students
 (
-    course  int references courses (id)  not null,
-    student int references students (id) not null,
+    course  int references courses (id) on delete cascade not null,
+    student int references students (id) on delete cascade not null,
     primary key (course, student)
 );
 
