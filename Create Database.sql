@@ -5,7 +5,9 @@ BEGIN;
 CREATE TABLE houses
 (
     id   int primary key not null,
-    name varchar(240)    not null
+    name varchar(240)    not null,
+    primary_color char(7) not null,
+    secondary_color char(7) not null
 );
 
 CREATE TABLE teachers
@@ -40,12 +42,12 @@ CREATE TABLE courses_students
 
 --Sample Data:
 
-INSERT INTO houses(id, name)
-VALUES (0, 'Unsorted'),
-       (1, 'Gryffindor'),
-       (2, 'Hufflepuff'),
-       (3, 'Ravenclaw'),
-       (4, 'Slytherin');
+INSERT INTO houses(id, name, primary_color, secondary_color)
+VALUES (0, 'Unsorted', '#888888', '#555555'),
+       (1, 'Gryffindor', '#740001', '#EEBA30'),
+       (2, 'Hufflepuff', '#ECB939', '#372E29'),
+       (3, 'Ravenclaw', '#0E1A40', '#946B2D'),
+       (4, 'Slytherin', '#1A472A', '#AAAAAA');
 
 INSERT INTO teachers(name, house)
 VALUES ('Severus Snape', 4),
