@@ -1,6 +1,7 @@
 import {
   getCourseById,
   getCourses,
+  updateCourse,
 } from "../repositories/courses.repository.js";
 import { createCourseResponse } from "../services/courses.service.js";
 
@@ -64,23 +65,23 @@ export async function getOneCourse(req, res) {
 
 export async function patchCourse(req, res) {
   try {
+    const id = req.params.id;
     const name = req.body.name;
     const teacher = req.body.teacher;
-    const students = req.body.students ?? [];
+    const students = req.body.students;
+    const updated = await updateCourse(id, name, teacher, students);
 
-    const { created, print } = await createCourseResponse(
-      name,
-      teacher,
-      students,
-      req.body,
-    );
+    if (updated === null) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
 
-    console.log(
-      `201: Course "${name}" created with ID ${created.rows[0].course}:`,
-    );
+    if (updated.rowCount === 0) {
+      console.log(`404: Course with ID ${id} not found`);
+      return res.status(404).json({ error: `Course with ID ${id} not found` });
+    }
 
-    console.table(print);
-    res.status(201).json(print);
+    console.log(`200: Course with ID ${id} updated`);
+    res.status(200).json(updated.rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not update course" });

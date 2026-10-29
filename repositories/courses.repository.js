@@ -19,15 +19,13 @@ export async function createCourse(name, teacher, students) {
 }
 
 export async function getCourses() {
-  return pool.query(
-    /* sql */ `
+  return pool.query(/* sql */ `
       SELECT c.id, c.name, c.teacher, array_agg(cs.student) AS students
       FROM courses c
       LEFT JOIN courses_students cs ON cs.course = c.id
       GROUP BY c.id
       ORDER BY c.id;
-    `,
-  );
+    `);
 }
 
 export async function getCourseById(id) {
@@ -46,7 +44,7 @@ export async function getCourseById(id) {
 export async function updateCourse(id, name, teacher, students) {
   const queryData = [id];
   const sets = [];
-  let insertStudents = null;
+  const updateStudents = Array.isArray(students);
 
   if (name !== undefined) {
     queryData.push(name);
@@ -56,15 +54,44 @@ export async function updateCourse(id, name, teacher, students) {
     queryData.push(teacher);
     sets.push(/* sql */ `teacher = $${queryData.length}`);
   }
-  if (Array.isArray(students)) {
-    //hvis students er givet, så opdater students. et tomt students array sletter alle students i course
-    insertStudents = /* sql */ `
 
+  if (sets.length === 0 && !updateStudents) {
+    return null;
+  }
+
+  let sqlStatement;
+
+  if (!updateStudents) {
+    sqlStatement = /* sql */ `
+      UPDATE courses
+      SET ${sets.join(", ")}
+      WHERE id = $1
+      RETURNING *
+    `;
+  } else {
+    queryData.push(students);
+    const studentsParam = `$${queryData.length}::int[]`;
+
+    const courseSql =
+      sets.length > 0
+        ? /* sql */ `UPDATE courses SET ${sets.join(", ")} WHERE id = $1 RETURNING id, name, teacher`
+        : /* sql */ `SELECT id, name, teacher FROM courses WHERE id = $1`;
+
+    sqlStatement = /* sql */ `
+      WITH updated AS (${courseSql}),
+      removed AS (
+        DELETE FROM courses_students
+        WHERE course = $1 AND student <> ALL(${studentsParam})
+      ),
+      added AS (
+        INSERT INTO courses_students (course, student)
+        SELECT u.id, unnest(${studentsParam}) FROM updated u
+        ON CONFLICT DO NOTHING
+      )
+      SELECT u.id, u.name, u.teacher, ${studentsParam} AS students
+      FROM updated u
     `;
   }
 
-  if (sets.length === 0 && students === undefined) {
-    return res.status(400).json({ error: "No fields to update" });
-  }
-  return pool.query(/* sql */ ``[queryData]);
+  return pool.query(sqlStatement, queryData);
 }
