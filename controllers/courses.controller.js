@@ -1,4 +1,5 @@
 import {
+  deleteCourse,
   getCourseById,
   getCourses,
   updateCourse,
@@ -85,5 +86,23 @@ export async function patchCourse(req, res) {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not update course" });
+  }
+}
+
+export async function deleteOneCourse(req, res) {
+  try {
+    const id = req.params.id;
+    const deleted = await deleteCourse(id);
+
+    if (deleted.rowCount === 0) {
+      console.log(`404: Course with ID ${id} not found`);
+      return res.status(404).json({ error: `Course with ID ${id} not found` });
+    }
+
+    console.log(`200: Course with ID ${id} deleted`);
+    res.status(200).json(deleted.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not delete course" });
   }
 }

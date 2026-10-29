@@ -41,6 +41,17 @@ export async function getCourseById(id) {
   );
 }
 
+export async function deleteCourse(id) {
+  return pool.query(
+    /* sql */ `
+      DELETE FROM courses
+      WHERE id = $1
+      RETURNING *
+    `,
+    [id],
+  );
+}
+
 export async function updateCourse(id, name, teacher, students) {
   const queryData = [id];
   const sets = [];
