@@ -130,19 +130,40 @@ Hvis fejl:
 ### PATCH Courses:id
 
 ```
-TODO
+patchCourse(id):
+    Hent ID fra parameteren efter slash af det requestede endpoint
+    Hent name, teacher og students fra request body
+    Opdater course med de felter som er sendt ELLER fejl fra Database
+    Hvis students er sendt, så brug students som den komplette liste af studerende på coursen
 ```
 
-### DELETE Teachers:id, Students:id
+```
+Updated = Return af patchCourse()
+Hvis ingen felter skal opdateres:
+    Set status til 400 (Ingen felter at opdatere!), send fejlbesked som response
+Hvis Updated ikke indeholder nogen rows:
+    Print 404 fejl i terminalen
+    Set status til 404 (Ingen courses med det ID som er givet som parameter!), send fejlbesked som response
+    Returner
+Hvis ingen fejl:
+    Print besked med coursens ID på terminalen
+    Set status til 200 (OK!), send Updated som response
+Hvis fejl:
+    Set status til 500 (Server error!), send generisk fejlbesked som response
+    Print fejl i terminalen
+```
+
+### DELETE Teachers:id, Students:id, Courses:id
 
 ```
-deleteOneTeacher(id) ELLER deleteOneStudent(id):
+deleteOneTeacher(id) ELLER deleteOneStudent(id) ELLER deleteOneCourse(id):
     Hent ID fra parameteren efter slash af det requestede endpoint
     Slet entryen med det givne ID ELLER fejl fra Database
+    Ved sletning af en course sletter Database automatisk de tilhørende relationer i courses_students
 ```
 
 ```
-Deleted = Return af deleteOneTeacher() ELLER deleteOneStudent()
+Deleted = Return af deleteOneTeacher() ELLER deleteOneStudent() ELLER deleteOneCourse()
 Hvis Deleted ikke indeholder nogen rows:
     Print 404 fejl i terminalen
     Set status til 404 (Ingen entries med det ID som er givet som parameter!), send fejlbesked som response
