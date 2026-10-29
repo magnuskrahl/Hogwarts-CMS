@@ -1,0 +1,23 @@
+info:
+  name: GET Student
+  type: http
+  seq: 6
+
+http:
+  method: GET
+  url: http://localhost:6767/students/1
+  body:
+    type: json
+    data: |-
+      {
+        "name": "[NAME]",
+        "semester": 0,
+        "house": 0
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
