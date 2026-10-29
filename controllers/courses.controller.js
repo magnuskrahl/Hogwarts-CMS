@@ -63,29 +63,24 @@ export async function getOneCourse(req, res) {
 }
 
 export async function patchCourse(req, res) {
-  let client;
-
   try {
-    const id = req.params.id;
-
     const name = req.body.name;
     const teacher = req.body.teacher;
-    const students = req.body.students;
-    const queryData = [id];
-    const sets = [];
+    const students = req.body.students ?? [];
 
-    if (name !== undefined) {
-      queryData.push(name);
-      sets.push(`name = $${queryData.length}`);
-    }
-    if (teacher !== undefined) {
-      queryData.push(teacher);
-      sets.push(`teacher = $${queryData.length}`);
-    }
+    const { created, print } = await createCourseResponse(
+      name,
+      teacher,
+      students,
+      req.body,
+    );
 
-    if (sets.length === 0 && students === undefined) {
-      return res.status(400).json({ error: "No fields to update" });
-    }
+    console.log(
+      `201: Course "${name}" created with ID ${created.rows[0].course}:`,
+    );
+
+    console.table(print);
+    res.status(201).json(print);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not update course" });

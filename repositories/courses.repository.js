@@ -19,3 +19,26 @@ export async function getCourseById(id) {
     [id],
   );
 }
+
+export async function updateCourse(id, name, teacher, students) {
+  const queryData = [id];
+  const sets = [];
+  let insertStudents = null;
+
+  if (name !== undefined) {
+    queryData.push(name);
+    sets.push(`name = $${queryData.length}`);
+  }
+  if (teacher !== undefined) {
+    queryData.push(teacher);
+    sets.push(`teacher = $${queryData.length}`);
+  }
+  if (Array.isArray(students) && students.length > 0) {
+    insertStudents = ``;
+  }
+
+  if (sets.length === 0 && students === undefined) {
+    return res.status(400).json({ error: "No fields to update" });
+  }
+  return pool.query(``[queryData]);
+}

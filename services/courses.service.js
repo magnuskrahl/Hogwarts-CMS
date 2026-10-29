@@ -13,3 +13,11 @@ export async function createCourseResponse(name, teacher, students, body) {
 
   return { created, print };
 }
+
+export async function updateCourseResponse(id, name, teacher, students, body) {
+  const updated = await updateCourse(id, name, teacher, students);
+
+  // lille trick for at formattere outputtet ligesom single fetch
+  const print = [{ id: updated.rows[0].course, ...body }];
+  return { updated, print };
+}
